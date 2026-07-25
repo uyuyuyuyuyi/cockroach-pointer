@@ -1,0 +1,31 @@
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# IDE
+.vscode/
+
+# Diagnostics
+diagnose_ani.py
+diagnose_frames.py
+test_*.ani
+test_*.cur
+
+# Preview images
+*_preview.png
+cockroach_tray_icon.png
+
+# Runtime generated resources (程序首次运行自动生成)
+resources/
+
+# OS
+Thumbs.db
+Desktop.ini
