@@ -28,12 +28,12 @@ CERCI_COLOR = (200, 195, 190, 220)    # 尾须
 # 身体几何 — 纵向椭圆，长轴垂直
 BODY_CENTER_X = 24.0          # 身体中心 X
 BODY_CENTER_Y = 28.0          # 身体中心 Y（偏下为触角留空间）
-BODY_RADIUS_X = 9.0           # 身体半宽 (水平) -- 加宽
+BODY_RADIUS_X = 10.5          # 身体半宽 (水平) — 复刻照片：更宽胖
 BODY_RADIUS_Y = 15.0          # 身体半高 (垂直)
 HEAD_OFFSET_X = 0.0           # 头部在身体正上方
 HEAD_OFFSET_Y = -18.0         # 头部 Y 偏移（身体中心上方）
-HEAD_RADIUS = 3.5             # 头部半径
-PRONOTUM_WIDTH = 12.0         # 前胸背板宽度 -- 同步加宽
+HEAD_RADIUS = 3.4             # 头部半径 — 照片中头相对身体较小
+PRONOTUM_WIDTH = 13.5         # 前胸背板宽度 — 照片中盾形明显
 
 # ── 腿部定义 ──────────────────────────────────────────
 # 每条腿: (名称, 附着角度°, 股节角度°, 股节长, 胫节长, 步态相位, 膝弯角度°)
@@ -43,20 +43,21 @@ PRONOTUM_WIDTH = 12.0         # 前胸背板宽度 -- 同步加宽
 LEGS = [
     # 左侧 (身体左边)
     # name         attach   base    fem_len tib_len phase knee_bend
-    ("left_front",    -155,   -145,    9.0,    8.0,   0.5,    +20),
-    ("left_mid",       180,    180,   10.0,    9.0,   0.0,    -18),
-    ("left_back",      155,    145,    9.0,    9.0,   0.5,    -18),
+    ("left_front",    -150,   -140,   10.5,    9.0,   0.5,    +28),
+    ("left_mid",       180,    175,   11.5,   10.0,   0.0,    -32),
+    ("left_back",      150,    140,   10.5,    9.5,   0.5,    -28),
     # 右侧 (身体右边)
-    ("right_front",    -25,    -35,    9.0,    8.0,   0.0,    -20),
-    ("right_mid",        0,      0,   10.0,    9.0,   0.5,    +18),
-    ("right_back",      25,     35,    9.0,    9.0,   0.0,    +18),
+    ("right_front",    -30,    -40,   10.5,    9.0,   0.0,    -28),
+    ("right_mid",        0,      5,   11.5,   10.0,   0.5,    +32),
+    ("right_back",      30,     40,   10.5,    9.5,   0.0,    +28),
 ]
 
 # ── 触角定义 ────────────────────────────────────────────
 # 每条触角: (头X偏移, 头Y偏移, 基础角度°, 长度, 分段数, 摆动相位)
+# 照片特征: 从头部斜上 45° 外展, 末端向外弯成弧, 较长
 ANTENNAE = [
-    (HEAD_OFFSET_X - 2, HEAD_OFFSET_Y - 2, -160, 16, 3, 0.25),
-    (HEAD_OFFSET_X + 2, HEAD_OFFSET_Y - 2,  -20, 16, 3, 0.75),
+    (HEAD_OFFSET_X - 2, HEAD_OFFSET_Y - 2, -135, 14, 4, 0.25),
+    (HEAD_OFFSET_X + 2, HEAD_OFFSET_Y - 2,  -45, 14, 4, 0.75),
 ]
 
 
@@ -167,15 +168,16 @@ def draw_frame(frame: int) -> Image.Image:
             fill=LEG_COLOR,
         )
 
-    # ── 2. 绘制尾须 (cerci) — 身体尾端，向下 ──
+    # ── 2. 绘制尾须 (cerci) — 身体尾端，向两侧分开伸出 ──
+    # 照片特征: 尾须较长, 明显向两侧外分
     c_phase = frame / NUM_FRAMES
-    c_swing = math.sin(c_phase * 2 * math.pi) * 5.0
+    c_swing = math.sin(c_phase * 2 * math.pi) * 4.0
     rear_x = body_cx
-    rear_y = body_cy + BODY_RADIUS_Y - 2
+    rear_y = body_cy + BODY_RADIUS_Y - 3
     for side in (-1, 1):
-        c_angle = math.radians(90 + side * (18 + c_swing))
-        end_x = rear_x + math.cos(c_angle) * 8
-        end_y = rear_y + math.sin(c_angle) * 8
+        c_angle = math.radians(90 + side * (28 + c_swing))
+        end_x = rear_x + math.cos(c_angle) * 9
+        end_y = rear_y + math.sin(c_angle) * 9
         draw.line([(rear_x, rear_y), (end_x, end_y)],
                   fill=CERCI_COLOR, width=1)
 
@@ -227,7 +229,24 @@ def draw_frame(frame: int) -> Image.Image:
             fill=ANTENNA_COLOR,
         )
 
-    # ── 8. 身体高光（纵向条状立体感） ──
+    # ── 8. 身体纹理: 翅缝线 + 腹节横纹 (复刻照片特征) ──
+    # 翅缝: 身体中央一条纵向浅缝线 (照片中两片翅闭合的中缝)
+    seam_color = (200, 196, 190, 140)
+    seam_y0 = body_cy - BODY_RADIUS_Y * 0.55
+    seam_y1 = body_cy + BODY_RADIUS_Y * 0.88
+    draw.line([(body_cx, seam_y0), (body_cx, seam_y1)],
+              fill=seam_color, width=1)
+    # 腹节: 身体下半部 3 条弧形节段线 (照片腹部节纹)
+    seg_color = (190, 186, 180, 120)
+    for i in range(1, 4):
+        seg_y = body_cy + BODY_RADIUS_Y * (0.10 + 0.24 * i)
+        seg_half = BODY_RADIUS_X * (1.0 - 0.18 * i)
+        draw.arc(
+            (body_cx - seg_half, seg_y - 2, body_cx + seg_half, seg_y + 2),
+            start=0, end=180, fill=seg_color, width=1,
+        )
+
+    # ── 9. 身体高光（纵向条状立体感） ──
     hl_w = BODY_RADIUS_X * 0.35
     hl_h = BODY_RADIUS_Y * 0.55
     highlight_bbox = (
